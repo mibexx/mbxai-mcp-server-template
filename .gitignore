@@ -45,6 +45,3 @@ logs/
 
 # Data
 data/
-
-# Cookiecutter
-{{cookiecutter.project_slug}}/

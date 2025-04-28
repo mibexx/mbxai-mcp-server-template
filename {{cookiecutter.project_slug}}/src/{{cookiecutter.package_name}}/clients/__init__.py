@@ -1,0 +1,1 @@
+"""Client libraries for {{cookiecutter.project_name}}.""" 
