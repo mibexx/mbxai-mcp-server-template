@@ -1,0 +1,224 @@
+# {{cookiecutter.project_name}}
+
+{{cookiecutter.description}}
+
+## Features
+
+- FastAPI-based REST server
+- Model Context Protocol (MCP) tool support
+- Sample weather tool implementation
+- Modern Python tooling (uv, ruff, mypy)
+- Type hints and comprehensive testing
+- Docker support for containerization
+- Kubernetes deployment configuration
+
+## Requirements
+
+- Python {{cookiecutter.python_version}} or higher
+- [uv](https://github.com/astral-sh/uv) package manager
+- Docker and Docker Compose (optional)
+- Kubernetes cluster with mbxai.cloud operator (optional)
+
+## Installation
+
+1. Clone this repository
+2. Install dependencies using uv:
+
+```bash
+uv venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate  # On Windows
+uv pip install -e .
+```
+
+## Usage
+
+### Running Locally
+
+1. Start the server:
+
+```bash
+uv run service
+```
+
+2. Access the API:
+   - API documentation: http://localhost:5000/docs
+   - Available tools: http://localhost:5000/tools
+   - Invoke a tool: POST http://localhost:5000/tools/{tool_name}/invoke
+
+### Running with Docker
+
+1. Build and start the container:
+
+```bash
+docker-compose up -d
+```
+
+2. Access the API:
+
+   - API documentation: http://localhost:5000/docs
+   - Available tools: http://localhost:5000/tools
+   - Invoke a tool: POST http://localhost:5000/tools/{tool_name}/invoke
+
+3. Stop the container:
+
+```bash
+docker-compose down
+```
+
+### Deploying to Kubernetes
+
+1. Apply the Kubernetes resource:
+
+```bash
+kubectl apply -f kubernetes/mbxai_resource.yaml
+```
+
+2. Check the deployment status:
+
+```bash
+kubectl get mbxairesource -n mbxai-sandbox
+```
+
+3. Access the service through the Kubernetes ingress or service.
+
+## Development
+
+- Run tests: `pytest`
+- Type checking: `mypy src`
+- Linting: `ruff check .`
+
+## Adding New Tools
+
+The MCP server is designed to make it easy to add new tools. Here's a step-by-step guide:
+
+### 1. Create a New Tool File
+
+Create a new Python file in the `src/{{cookiecutter.package_name}}/project/` directory. For example, to create a calculator tool:
+
+```bash
+touch src/{{cookiecutter.package_name}}/project/calculator.py
+```
+
+### 2. Define Your Tool Function
+
+Implement your tool function with proper type hints:
+
+```python
+from typing import Any
+
+async def calculate(operation: str, a: float, b: float) -> dict[str, Any]:
+    """Perform a calculation based on the operation."""
+    result = 0
+    if operation == "add":
+        result = a + b
+    elif operation == "subtract":
+        result = a - b
+    elif operation == "multiply":
+        result = a * b
+    elif operation == "divide":
+        result = a / b if b != 0 else "Error: Division by zero"
+
+    return {
+        "operation": operation,
+        "a": a,
+        "b": b,
+        "result": result
+    }
+```
+
+### 3. Create the Tool Object
+
+Create a Tool object using the modelcontextprotocol library:
+
+```python
+from modelcontextprotocol import Tool
+
+calculator_tool = Tool(
+    name="calculate",
+    description="Perform basic arithmetic calculations",
+    function=calculate,
+    parameters={
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "The operation to perform (add, subtract, multiply, divide)",
+                "enum": ["add", "subtract", "multiply", "divide"]
+            },
+            "a": {
+                "type": "number",
+                "description": "The first number"
+            },
+            "b": {
+                "type": "number",
+                "description": "The second number"
+            }
+        },
+        "required": ["operation", "a", "b"]
+    }
+)
+```
+
+### 4. Register Your Tool
+
+Import and register your tool in `src/{{cookiecutter.package_name}}/api/app.py`:
+
+```python
+from {{cookiecutter.package_name}}.project.calculator import calculator_tool
+
+# Add this line after the existing tool registration
+tool_registry.register_tool(calculator_tool)
+```
+
+### 5. Test Your Tool
+
+Restart the server and test your tool:
+
+```bash
+curl -X POST "http://localhost:5000/tools/calculate/invoke" \
+     -H "Content-Type: application/json" \
+     -d '{"operation": "add", "a": 5, "b": 3}'
+```
+
+Expected response:
+
+```json
+{
+  "operation": "add",
+  "a": 5,
+  "b": 3,
+  "result": 8
+}
+```
+
+### 6. Add Tests
+
+Create a test file for your tool in the `tests/` directory:
+
+```python
+import pytest
+from {{cookiecutter.package_name}}.project.calculator import calculate
+
+@pytest.mark.asyncio
+async def test_calculate():
+    result = await calculate("add", 5, 3)
+    assert result["operation"] == "add"
+    assert result["a"] == 5
+    assert result["b"] == 3
+    assert result["result"] == 8
+```
+
+### Best Practices
+
+- Keep tool functions focused on a single responsibility
+- Use descriptive names for tools and parameters
+- Provide comprehensive descriptions for tools and parameters
+- Include proper error handling in your tool functions
+- Add tests for all your tools
+- Document any external dependencies or API keys required
+
+## License
+
+{{cookiecutter.open_source_license}}
