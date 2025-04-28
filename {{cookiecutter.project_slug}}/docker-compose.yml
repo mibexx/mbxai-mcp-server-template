@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  { { cookiecutter.project_slug } }:
+  app:
     build:
       context: .
       dockerfile: Dockerfile

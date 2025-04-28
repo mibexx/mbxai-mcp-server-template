@@ -1,19 +1,7 @@
-FROM python:3.12-slim
+FROM mibexx/mbxai-service:latest
 
-WORKDIR /app
-
-# Install uv
-RUN pip install --no-cache-dir uv
-
-# Copy project files
-COPY pyproject.toml .
-COPY src/ src/
+# Copy application code
+COPY . .
 
 # Install dependencies
-RUN uv pip install -e .
-
-# Expose the port
-EXPOSE 5000
-
-# Run the service
-CMD ["uv", "run", "service"] 
+RUN uv sync --no-dev
