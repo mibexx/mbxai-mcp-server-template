@@ -16,8 +16,6 @@
 
 - Python {{cookiecutter.python_version}} or higher
 - [uv](https://github.com/astral-sh/uv) package manager
-- Docker and Docker Compose (optional)
-- Kubernetes cluster with mbxai.cloud operator (optional)
 
 ## Installation
 
@@ -44,6 +42,7 @@ uv run service
 
 2. Access the API:
    - API documentation: http://localhost:5000/docs
+   - MCP server: http://localhost:5000/mcp
    - Available tools: http://localhost:5000/tools
    - Invoke a tool: POST http://localhost:5000/tools/{tool_name}/invoke
 
@@ -58,6 +57,7 @@ docker-compose up -d
 2. Access the API:
 
    - API documentation: http://localhost:5000/docs
+   - MCP server: http://localhost:5000/mcp
    - Available tools: http://localhost:5000/tools
    - Invoke a tool: POST http://localhost:5000/tools/{tool_name}/invoke
 
@@ -101,13 +101,18 @@ Create a new Python file in the `src/{{cookiecutter.package_name}}/project/` dir
 touch src/{{cookiecutter.package_name}}/project/calculator.py
 ```
 
-### 2. Define Your Tool Function
+### 2. Define Your Tool Function with MCP Decorator
 
-Implement your tool function with proper type hints:
+Implement your tool function with proper type hints and the MCP decorator:
 
 ```python
 from typing import Any
+from mcp.server.fastmcp import FastMCP
 
+# Create a FastMCP instance for this module
+mcp = FastMCP("calculator")
+
+@mcp.tool()
 async def calculate(operation: str, a: float, b: float) -> dict[str, Any]:
     """Perform a calculation based on the operation."""
     result = 0
@@ -126,42 +131,12 @@ async def calculate(operation: str, a: float, b: float) -> dict[str, Any]:
         "b": b,
         "result": result
     }
+
+# Export the tool for registration in app.py
+calculator_tool = mcp.tools["calculate"]
 ```
 
-### 3. Create the Tool Object
-
-Create a Tool object using the modelcontextprotocol library:
-
-```python
-from modelcontextprotocol import Tool
-
-calculator_tool = Tool(
-    name="calculate",
-    description="Perform basic arithmetic calculations",
-    function=calculate,
-    parameters={
-        "type": "object",
-        "properties": {
-            "operation": {
-                "type": "string",
-                "description": "The operation to perform (add, subtract, multiply, divide)",
-                "enum": ["add", "subtract", "multiply", "divide"]
-            },
-            "a": {
-                "type": "number",
-                "description": "The first number"
-            },
-            "b": {
-                "type": "number",
-                "description": "The second number"
-            }
-        },
-        "required": ["operation", "a", "b"]
-    }
-)
-```
-
-### 4. Register Your Tool
+### 3. Register Your Tool
 
 Import and register your tool in `src/{{cookiecutter.package_name}}/api/app.py`:
 
@@ -169,10 +144,10 @@ Import and register your tool in `src/{{cookiecutter.package_name}}/api/app.py`:
 from {{cookiecutter.package_name}}.project.calculator import calculator_tool
 
 # Add this line after the existing tool registration
-tool_registry.register_tool(calculator_tool)
+mcp.register_tool(calculator_tool)
 ```
 
-### 5. Test Your Tool
+### 4. Test Your Tool
 
 Restart the server and test your tool:
 
@@ -193,7 +168,7 @@ Expected response:
 }
 ```
 
-### 6. Add Tests
+### 5. Add Tests
 
 Create a test file for your tool in the `tests/` directory:
 
