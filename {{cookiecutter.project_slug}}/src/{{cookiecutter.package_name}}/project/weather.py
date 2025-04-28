@@ -14,6 +14,3 @@ async def get_weather(location: str) -> dict[str, Any]:
         "condition": "sunny",
         "humidity": 65,
     }
-
-# Export the tool for registration in app.py
-weather_tool = mcp.tools["get_weather"]
