@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from mcp.server.fastmcp import FastMCP
+from pydantic import BaseModel
+from typing import Any
 from ..config import get_config
 
 config = get_config()
@@ -20,6 +22,7 @@ mcp_server = FastMCP(config.name)
 # Register the weather tool with the MCP server
 mcp_server.add_tool(get_weather)
 
+
 # Legacy endpoints for backward compatibility
 @app.get("/tools")
 async def get_tools():
@@ -28,12 +31,12 @@ async def get_tools():
     tools = await mcp_server.list_tools()
     return tools
 
+
 @app.post("/tools/{tool_name}/invoke")
-async def invoke_tool(tool_name: str, **kwargs):
+async def invoke_tool(tool_name: str, arguments: dict[str, Any] = Body(...)):
     """Invoke a specific MCP tool."""
-    # Use the call_tool() method to invoke the tool
     try:
-        result = await mcp_server.call_tool(tool_name, **kwargs)
+        result = await mcp_server.call_tool(tool_name, arguments=arguments)
         return result
     except Exception as e:
-        return {"error": f"Error invoking tool {tool_name}: {str(e)}"} 
+        return {"error": f"Error invoking tool {tool_name}: {str(e)}"}
