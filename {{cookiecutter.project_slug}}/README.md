@@ -23,11 +23,11 @@
 2. Install dependencies using uv:
 
 ```bash
-uv venv
+uv sync
 source .venv/bin/activate  # On Unix/macOS
 # or
 .venv\Scripts\activate  # On Windows
-uv pip install -e .
+uv sync
 ```
 
 ## Usage
@@ -55,9 +55,6 @@ docker-compose up -d
 ```
 
 2. Access the API:
-
-   - API documentation: http://localhost:5000/docs
-   - MCP server: http://localhost:5000/mcp
    - Available tools: http://localhost:5000/tools
    - Invoke a tool: POST http://localhost:5000/tools/{tool_name}/invoke
 
@@ -109,7 +106,7 @@ Implement your tool function with proper type hints and the MCP decorator:
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 
-# Create a FastMCP instance for this module
+# Create a FastMCP instance for this module in project/calculate.py
 mcp = FastMCP("calculator")
 
 @mcp.tool()
@@ -132,8 +129,11 @@ async def calculate(operation: str, a: float, b: float) -> dict[str, Any]:
         "result": result
     }
 
-# Export the tool for registration in app.py
-calculator_tool = mcp.tools["calculate"]
+# Import tool in app.py
+from ..project.calculate import calculate
+
+# Export the tool for registration in app.py in register_tools
+await server.add_tool(calculate)
 ```
 
 ### 3. Register Your Tool

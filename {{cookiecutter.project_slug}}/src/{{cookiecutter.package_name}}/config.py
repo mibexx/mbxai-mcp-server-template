@@ -22,6 +22,7 @@ class ApplicationConfig(BaseSettings):
     """Application configuration."""
 
     name: str = "{{cookiecutter.project_name}}"
+    description: str = "{{cookiecutter.project_description}}"
     version: str = Field(default_factory=_get_version)
     log_level: int = logging.INFO
 
