@@ -22,7 +22,6 @@ class ApplicationConfig(BaseSettings):
     """Application configuration."""
 
     name: str = "{{cookiecutter.project_name}}"
-    description: str = "{{cookiecutter.project_description}}"
     version: str = Field(default_factory=_get_version)
     log_level: int = logging.INFO
 
@@ -32,6 +31,7 @@ class ApplicationConfig(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
 
 class OpenRouterAPIConfig(BaseSettings):
     """OpenRouter API configuration."""
@@ -46,12 +46,45 @@ class OpenRouterAPIConfig(BaseSettings):
         extra="ignore",
     )
 
+
+class MCPConfig(BaseSettings):
+    """MCP server configuration."""
+
+    server_url: str | None = Field(default=None, alias="MCP_SERVER_URL")
+
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        env_file=ROOT_DIR / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+class ServiceAPIConfig(BaseSettings):
+    """Service API configuration."""
+
+    api_url: str = Field(default="https://api.mbxai.cloud/api", alias="MBXAI_API_URL")
+    token: str = Field(default="", alias="MBXAI_API_TOKEN")
+    service_namespace: str = Field(default="mbxai-srv", alias="SERVICE_NAMESPACE")
+
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        env_file=ROOT_DIR / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
 @lru_cache
 def get_config() -> ApplicationConfig:
     """Get the application configuration singleton."""
     return ApplicationConfig()
 
+
 @lru_cache
 def get_openrouter_api_config() -> OpenRouterAPIConfig:
     """Get the OpenRouter API configuration singleton."""
     return OpenRouterAPIConfig()
+
+@lru_cache
+def get_service_api_config() -> ServiceAPIConfig:
+    """Get the service api configuration singleton."""
+    return ServiceAPIConfig()
